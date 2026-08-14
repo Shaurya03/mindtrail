@@ -4,10 +4,6 @@ import Note from "@/models/note";
 
 async function createNote(req, res) {
 
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
   const auth = verifyAuth(req);
 
   const { valid, userId } = auth;
@@ -17,6 +13,7 @@ async function createNote(req, res) {
   }
 
   try {
+
     await connectDB();
 
     const {
@@ -42,4 +39,41 @@ async function createNote(req, res) {
   }
 };
 
-export default createNote;
+async function getNotes(req, res) {
+
+  const auth = verifyAuth(req);
+
+  const { valid, userId } = auth;
+
+  if (valid === false) {
+    return res.status(401).json({ error: "Authentication required" });
+  }
+
+  try {
+
+    await connectDB();
+
+    const notes = await Note.find({ userId });
+
+    return res.status(200).json({ notes });
+
+  } catch (error) {
+    return res.status(500).json({ error: "Failed to fetch notes. Please try again" });
+  }
+
+};
+
+function handler(req, res) {
+
+  if (req.method === "POST") {
+    return createNote(req, res);
+  }
+
+  if (req.method === "GET") {
+    return getNotes(req, res);
+  }
+
+  return res.status(405).json({ error: "Method not allowed" });
+};
+
+export default handler;
