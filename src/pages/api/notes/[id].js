@@ -95,6 +95,40 @@ async function updateNote(req, res) {
   }
 };
 
+async function deleteNote(req, res) {
+
+  const auth = verifyAuth(req);
+
+  const { valid, userId } = auth;
+
+  if (valid === false) {
+    return res.status(401).json({ error: "Authentication required" });
+  }
+
+  const { id } = req.query;
+
+  const isValid = mongoose.Types.ObjectId.isValid(id);
+
+  if (!isValid) {
+    return res.status(400).json({ error: "Invalid note ID" });
+  }
+
+  try {
+    await connectDB();
+
+    const note = await Note.findOneAndDelete({ _id: id, userId });
+
+    if (note === null) {
+      return res.status(404).json({ error: "Note not found" });
+    }
+
+    return res.status(200).json({ note });
+
+  } catch (error) {
+    return res.status(500).json({ error: "Failed to delete note. Please try again" });
+  }
+};
+
 function handler(req, res) {
 
   if (req.method === "GET") {
@@ -103,6 +137,10 @@ function handler(req, res) {
 
   if (req.method === "PATCH") {
     return updateNote(req, res);
+  }
+
+  if (req.method === "DELETE") {
+    return deleteNote(req, res);
   }
 
   return res.status(405).json({ error: "Method not allowed" });
