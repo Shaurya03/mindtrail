@@ -13,5 +13,3 @@ function chunkText(text, chunkSize = 500, overlap = 100) {
 };
 
 export default chunkText;
-
-console.log(chunkText("This is a test sentence for chunking. ".repeat(20), 100, 20));

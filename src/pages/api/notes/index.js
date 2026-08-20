@@ -1,6 +1,7 @@
 import connectDB from "@/lib/mongodb";
 import verifyAuth from "@/lib/auth";
 import Note from "@/models/note";
+import embedAndUpsertNote from "@/lib/embedNote";
 
 async function createNote(req, res) {
 
@@ -30,7 +31,13 @@ async function createNote(req, res) {
       return res.status(400).json({ error: "Content is missing" });
     }
 
-    const note = await Note.create({ userId, title, content, tags })
+    const note = await Note.create({ userId, title, content, tags });
+
+    try {
+      await embedAndUpsertNote(note._id, userId, content);
+    } catch (error) {
+      console.error(`Embedding failed for note ${note._id}:`, error);
+    }
 
     return res.status(201).json({ note });
 
