@@ -2,6 +2,7 @@ import connectDB from "@/lib/mongodb";
 import verifyAuth from "@/lib/auth";
 import Note from "@/models/note";
 import mongoose from "mongoose";
+import { embedAndUpsertNote, deleteNoteChunks } from "@/lib/embedNote";
 
 async function getNote(req, res) {
 
@@ -88,6 +89,15 @@ async function updateNote(req, res) {
       return res.status(404).json({ error: "Note not found" });
     }
 
+    if (updateData.content) {
+      try {
+        await deleteNoteChunks(id);
+        await embedAndUpsertNote(id, userId, content);
+      } catch (error) {
+        console.error(`Embedding failed for note ${note._id}:`, error);
+      }
+    }
+
     return res.status(200).json({ note });
 
   } catch (error) {
@@ -120,6 +130,12 @@ async function deleteNote(req, res) {
 
     if (note === null) {
       return res.status(404).json({ error: "Note not found" });
+    }
+
+    try {
+      await deleteNoteChunks(id);
+    } catch (error) {
+      console.error(`Failed to delete Pinecone chunks for note ${note._id}:`, error);
     }
 
     return res.status(200).json({ note });

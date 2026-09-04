@@ -27,4 +27,13 @@ async function embedAndUpsertNote(noteId, userId, content) {
   await index.upsert({ records });
 };
 
-export default embedAndUpsertNote;
+async function deleteNoteChunks(noteId) {
+  const list = await index.listPaginated({ prefix: `${noteId}-chunk-` });
+  const ids = list.vectors.map((vector) => vector.id);
+
+  if (ids.length === 0) return;
+
+  await index.deleteMany({ ids });
+};
+
+export { embedAndUpsertNote, deleteNoteChunks };

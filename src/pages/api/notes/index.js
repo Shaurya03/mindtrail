@@ -1,7 +1,7 @@
 import connectDB from "@/lib/mongodb";
 import verifyAuth from "@/lib/auth";
 import Note from "@/models/note";
-import embedAndUpsertNote from "@/lib/embedNote";
+import { embedAndUpsertNote } from "@/lib/embedNote";
 
 async function createNote(req, res) {
 
