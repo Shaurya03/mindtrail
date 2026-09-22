@@ -1,14 +1,17 @@
 import jwt from "jsonwebtoken";
+import { parseCookie } from "cookie";
 
 function verifyAuth(req) {
 
-  const header = req.headers.authorization;
+  const header = req.headers.cookie;
 
-  if (!header || !header.startsWith("Bearer ")) {
+  if (!header) {
     return { valid: false };
   }
 
-  const token = header.split(" ")[1];
+  const parse = parseCookie(header);
+
+  const token = parse.token;
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);

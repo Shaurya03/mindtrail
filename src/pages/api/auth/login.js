@@ -2,6 +2,9 @@ import connectDB from "@/lib/mongodb";
 import User from "@/models/user";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { stringifySetCookie } from "cookie";
+
+const THIRTY_DAYS_SECONDS = 60 * 60 * 24 * 30;
 
 async function loginUser(req, res) {
 
@@ -10,7 +13,7 @@ async function loginUser(req, res) {
   }
 
   try {
-    const connect = await connectDB();
+    await connectDB();
 
     const { email, password } = req.body;
 
@@ -41,7 +44,18 @@ async function loginUser(req, res) {
       { expiresIn: "30d" }
     );
 
-    return res.status(200).json({ token, id: user._id, email: user.email });
+    const serialized = stringifySetCookie({
+      name: "token",
+      value: token,
+      httpOnly: true,
+      path: "/",
+      sameSite: "strict",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: THIRTY_DAYS_SECONDS
+    });
+
+    res.setHeader("Set-Cookie", serialized);
+    return res.status(200).json({ id: user._id, email: user.email });
 
   } catch (error) {
     return res.status(500).json({ error: "Login failed. Please try again." });
